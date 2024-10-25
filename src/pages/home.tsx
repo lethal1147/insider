@@ -30,7 +30,7 @@ export default function Home() {
     <main className="h-screen w-screen relative flex flex-col justify-center items-center bg-gray-main">
       <img
         className="animate-float"
-        src="./insider-logo.png"
+        src="/insider-logo.png"
         alt="insider logo"
       />
       <div className="mt-20 flex flex-col gap-5">
