@@ -44,6 +44,7 @@ export default function Home() {
         <Button
           className="min-w-40 text-3xl font-bold text-gray-main h-16"
           size="lg"
+          asChild
         >
           <Link to="/join">Join</Link>
         </Button>
