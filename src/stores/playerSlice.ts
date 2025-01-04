@@ -4,9 +4,15 @@ import { PlayerType } from "@/types";
 
 const getInitialPlayerState = (): PlayerType => {
   const storedPlayer = localStorage.getItem("player");
-  return storedPlayer
-    ? JSON.parse(storedPlayer)
-    : { name: "Guest", color: "#fff" };
+  if (storedPlayer) {
+    return JSON.parse(storedPlayer);
+  } else {
+    localStorage.setItem(
+      "player",
+      JSON.stringify({ name: "Guest", color: "#fff" })
+    );
+    return { name: "Guest", color: "#fff" };
+  }
 };
 
 const initialState: PlayerType = getInitialPlayerState();

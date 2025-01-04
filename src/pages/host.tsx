@@ -112,7 +112,7 @@ export default function Host() {
         asChild
         className="size-10 flex justify-center items-center bg-white rounded-full absolute top-5 left-5"
       >
-        <Link to="home">
+        <Link to="/home">
           <ArrowLeft />
         </Link>
       </Button>
