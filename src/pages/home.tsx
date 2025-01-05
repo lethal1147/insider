@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -13,6 +11,8 @@ import {
   changePlayerName,
   player,
 } from "@/stores";
+import HostDialog from "@/components/form/hostDialog";
+import JoinDialog from "@/components/form/joinDialog";
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -34,20 +34,8 @@ export default function Home() {
         alt="insider logo"
       />
       <div className="mt-20 flex flex-col gap-5">
-        <Button
-          className="min-w-40 text-3xl font-bold text-gray-main h-16"
-          size="lg"
-          asChild
-        >
-          <Link to="/host">Host</Link>
-        </Button>
-        <Button
-          className="min-w-40 text-3xl font-bold text-gray-main h-16"
-          size="lg"
-          asChild
-        >
-          <Link to="/join">Join</Link>
-        </Button>
+        <HostDialog />
+        <JoinDialog />
       </div>
 
       <div className="absolute top-4 right-4 flex items-center space-x-2">

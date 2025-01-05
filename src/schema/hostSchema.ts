@@ -1,10 +1,12 @@
 import z from "zod";
 
 export const hostSchema = z.object({
+  roomName: z.string(),
   password: z.string().optional(),
-  vetoTime: z.number(),
+  totalRound: z.number(),
+  maxMember: z.number(),
   guessTime: z.number(),
-  round: z.number(),
+  voteTime: z.number(),
 });
 
 export type HostSchemaType = z.infer<typeof hostSchema>;
