@@ -1,17 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "./storeConfig";
 import { PlayerType } from "@/types";
+import { v4 as uuidv4 } from "uuid";
 
 const getInitialPlayerState = (): PlayerType => {
   const storedPlayer = localStorage.getItem("player");
   if (storedPlayer) {
     return JSON.parse(storedPlayer);
   } else {
-    localStorage.setItem(
-      "player",
-      JSON.stringify({ name: "Guest", color: "#fff" })
-    );
-    return { name: "Guest", color: "#fff" };
+    const uuid = uuidv4();
+    console.log(uuid);
+    const newPlayer = { name: "Guest", color: "#fff", uniqueId: uuid };
+    localStorage.setItem("player", JSON.stringify(newPlayer));
+    return newPlayer;
   }
 };
 
