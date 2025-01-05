@@ -17,6 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { handleError, handleSuccess, withAsync } from "@/utils";
+import { RoomApi } from "@/api";
 
 export default function HostDialog() {
   const form = useForm<HostSchemaType>({
@@ -32,9 +34,13 @@ export default function HostDialog() {
 
   const onSubmit = async (data: HostSchemaType) => {
     try {
-      console.log(data);
+      const { response, error } = await withAsync(() =>
+        RoomApi.createRoom(data)
+      );
+      if (error || !response) throw error;
+      handleSuccess(response.message);
     } catch (err) {
-      console.log(err);
+      handleError(err);
     }
   };
 
