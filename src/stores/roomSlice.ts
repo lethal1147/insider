@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "./storeConfig";
 import { PlayerType, RoomType } from "@/types";
-import { io, Socket } from "socket.io-client";
-import { BASE_URL } from "@/configs";
+import { Socket } from "socket.io-client";
+import { withAsync } from "@/utils";
+import roomApi from "@/api/roomApi";
 
 type RoomState = {
   socket: null | Socket;
@@ -24,26 +25,24 @@ export const roomSlice = createSlice({
   name: "room",
   initialState,
   reducers: {
-    joinRoom: (
+    joinRoom: async (
       state,
-      action: PayloadAction<{ roomId: string; user: PlayerType }>
+      action: PayloadAction<{
+        roomId: string;
+        user: PlayerType;
+        password?: string;
+      }>
     ) => {
-      const socket = io(BASE_URL, {
-        query: {
-          roomId: action.payload.roomId,
-          user: action.payload.user,
-        },
-      });
-      socket.connect();
-      const returnObj = {
-        ...state,
-        socket,
-      };
-      socket.on("getMembersInRoom", (users) => {
-        returnObj.members = users;
-      });
-
-      return returnObj;
+      const { roomId, user, password } = action.payload;
+      const res = await withAsync(() =>
+        roomApi.joinRoom(roomId, {
+          userId: user.uniqueId,
+          name: user.name,
+          color: user.color,
+          password,
+        })
+      );
+      console.log(res);
     },
   },
 });

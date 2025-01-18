@@ -1,5 +1,5 @@
 export type ApiResponseType<T> = {
   message: string;
-  data: T | null;
+  data: T;
   error: boolean;
 };

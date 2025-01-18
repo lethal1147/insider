@@ -19,8 +19,11 @@ import {
 } from "@/components/ui/dialog";
 import { handleError, handleSuccess, withAsync } from "@/utils";
 import { RoomApi } from "@/api";
+import { useNavigate } from "react-router-dom";
+import { RoomType } from "@/types";
 
 export default function HostDialog() {
+  const navigate = useNavigate();
   const form = useForm<HostSchemaType>({
     resolver: zodResolver(hostSchema),
     defaultValues: {
@@ -34,10 +37,11 @@ export default function HostDialog() {
 
   const onSubmit = async (data: HostSchemaType) => {
     try {
-      const { response, error } = await withAsync(() =>
+      const { response, error } = await withAsync<RoomType>(() =>
         RoomApi.createRoom(data)
       );
       if (error || !response) throw error;
+      navigate(`/lobby/${response.data.publicId}`);
       handleSuccess(response.message);
     } catch (err) {
       handleError(err);

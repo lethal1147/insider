@@ -17,8 +17,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDispatch, useSelector } from "react-redux";
+import { player, RootState } from "@/stores";
+import { joinRoom } from "@/stores/roomSlice";
 
 export default function JoinDialog() {
+  // const roomData = useSelector((state: RootState) => room(state));
+  const playerData = useSelector((state: RootState) => player(state));
+  const dispatch = useDispatch();
   const form = useForm<JoinSchemaType>({
     resolver: zodResolver(joinSchema),
     defaultValues: {
@@ -28,7 +34,9 @@ export default function JoinDialog() {
 
   const onSubmit = async (data: JoinSchemaType) => {
     try {
-      console.log(data);
+      const res = dispatch(joinRoom({ roomId: data.roomId, user: playerData }));
+
+      console.log(res);
     } catch (err) {
       console.log(err);
     }

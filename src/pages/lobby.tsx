@@ -1,11 +1,12 @@
 import PlayerCard from "@/components/common/playerCard";
 import { Button } from "@/components/ui/button";
-// import { player, RootState } from "@/stores";
-// import { room } from "@/stores/roomSlice";
-// import { useSelector } from "react-redux";
 import { MOCK_PLAYERS } from "@/data";
+import { player, RootState } from "@/stores";
+import { joinRoom } from "@/stores/roomSlice";
 import { PlayerType } from "@/types";
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useParams } from "react-router-dom";
 
 const MOCK_CURRENT_PLAYER: PlayerType = {
   name: "BlazeFalcon",
@@ -16,8 +17,19 @@ const MOCK_CURRENT_PLAYER: PlayerType = {
 const MOCK_MAX_MEMBER = 8;
 
 export default function Lobby() {
-  // const playerData = useSelector((state: RootState) => player(state));
+  const dispatch = useDispatch();
+  const playerData = useSelector((state: RootState) => player(state));
   // const roomData = useSelector((state: RootState) => room(state));
+  const { publicId } = useParams();
+
+  const handleJoinRoom = async () => {
+    if (!publicId) return;
+    dispatch(joinRoom({ roomId: publicId, user: playerData }));
+  };
+
+  useEffect(() => {
+    handleJoinRoom();
+  }, []);
 
   return (
     <main className="h-screen w-screen bg-gray-main p-5 flex flex-col lg:p-10">

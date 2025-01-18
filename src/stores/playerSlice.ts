@@ -5,15 +5,12 @@ import { v4 as uuidv4 } from "uuid";
 
 const getInitialPlayerState = (): PlayerType => {
   const storedPlayer = localStorage.getItem("player");
-  if (storedPlayer) {
-    return JSON.parse(storedPlayer);
-  } else {
-    const uuid = uuidv4();
-    console.log(uuid);
-    const newPlayer = { name: "Guest", color: "#fff", uniqueId: uuid };
-    localStorage.setItem("player", JSON.stringify(newPlayer));
-    return newPlayer;
-  }
+  if (storedPlayer) return JSON.parse(storedPlayer);
+
+  const uuid = uuidv4();
+  const newPlayer = { name: "Guest", color: "#fff", uniqueId: uuid };
+  localStorage.setItem("player", JSON.stringify(newPlayer));
+  return newPlayer;
 };
 
 const initialState: PlayerType = getInitialPlayerState();

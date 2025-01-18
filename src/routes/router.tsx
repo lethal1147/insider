@@ -6,7 +6,7 @@ export default function Router() {
   return (
     <Routes>
       <Route path="*" element={<Home />} />
-      <Route path="/lobby" element={<Lobby />} />
+      <Route path="/lobby/:publicId" element={<Lobby />} />
     </Routes>
   );
 }
