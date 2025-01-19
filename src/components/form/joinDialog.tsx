@@ -17,14 +17,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { player, RootState } from "@/stores";
-import { joinRoom } from "@/stores/roomSlice";
+import { handleError } from "@/utils";
+import { useNavigate } from "react-router-dom";
+import { joinRoomByRoomId } from "@/stores/roomSlice";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
 
 export default function JoinDialog() {
+  const navigate = useNavigate();
   // const roomData = useSelector((state: RootState) => room(state));
   const playerData = useSelector((state: RootState) => player(state));
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const form = useForm<JoinSchemaType>({
     resolver: zodResolver(joinSchema),
     defaultValues: {
@@ -34,11 +38,21 @@ export default function JoinDialog() {
 
   const onSubmit = async (data: JoinSchemaType) => {
     try {
-      const res = dispatch(joinRoom({ roomId: data.roomId, user: playerData }));
-
-      console.log(res);
+      const res = await dispatch(
+        joinRoomByRoomId({
+          roomId: data.roomId,
+          body: {
+            userId: playerData.uniqueId,
+            name: playerData.name,
+            color: playerData.color,
+            password: data.password,
+          },
+        })
+      );
+      if (res.payload.error) throw new Error(res.payload.message);
+      navigate(`/lobby/${res.payload.data?.publicId}`);
     } catch (err) {
-      console.log(err);
+      handleError(err);
     }
   };
 

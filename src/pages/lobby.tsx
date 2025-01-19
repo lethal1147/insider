@@ -1,48 +1,64 @@
 import PlayerCard from "@/components/common/playerCard";
 import { Button } from "@/components/ui/button";
-import { MOCK_PLAYERS } from "@/data";
+import { initSocket } from "@/lib/socket";
 import { player, RootState } from "@/stores";
-import { joinRoom } from "@/stores/roomSlice";
-import { PlayerType } from "@/types";
+import { room, setMembers } from "@/stores/roomSlice";
+import { handleSuccess } from "@/utils";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
-
-const MOCK_CURRENT_PLAYER: PlayerType = {
-  name: "BlazeFalcon",
-  color: "#FF5733",
-  uniqueId: "a7c3d1e2-9b2d-4f6f-8732-9f8c1a5b9a3e",
-};
-
-const MOCK_MAX_MEMBER = 8;
+import { Link } from "react-router-dom";
 
 export default function Lobby() {
   const dispatch = useDispatch();
   const playerData = useSelector((state: RootState) => player(state));
-  // const roomData = useSelector((state: RootState) => room(state));
-  const { publicId } = useParams();
-
-  const handleJoinRoom = async () => {
-    if (!publicId) return;
-    dispatch(joinRoom({ roomId: publicId, user: playerData }));
-  };
+  const roomData = useSelector((state: RootState) => room(state));
 
   useEffect(() => {
-    handleJoinRoom();
-  }, []);
+    if (!playerData || !roomData.roomData?.id) return;
+
+    const socket = initSocket();
+    socket.emit("join-room", {
+      roomId: roomData.roomData?.id,
+      ...playerData,
+    });
+
+    socket.on("room-members", (data) => {
+      dispatch(setMembers(data));
+    });
+
+    socket.on("members-leave", (member) => {
+      console.log(playerData.uniqueId !== member.id);
+      console.log(playerData.uniqueId);
+      console.log(member.id);
+      if (playerData.uniqueId !== member.id) {
+        handleSuccess(`${member.name} has leave.`);
+      }
+    });
+
+    return () => {
+      socket.emit("leave-room", {
+        roomId: roomData.roomData?.id,
+        ...playerData,
+      });
+      socket.close();
+    };
+  }, [playerData, roomData.roomData?.id]);
+
+  const { members } = roomData;
 
   return (
     <main className="h-screen w-screen bg-gray-main p-5 flex flex-col lg:p-10">
       <div className="w-full grow">
         <h1 className="text-5xl font-bold text-white">
-          Room name ({MOCK_PLAYERS.length}/{MOCK_MAX_MEMBER})
+          {roomData?.roomData?.roomName} ({members.length}/
+          {roomData?.roomData?.maxMember})
         </h1>
         <div className="grid grid-cols-6 mt-10 gap-10">
-          {MOCK_PLAYERS.map((player) => (
+          {members.map((player) => (
             <PlayerCard
-              key={player.uniqueId}
-              player={player}
-              isHost={MOCK_CURRENT_PLAYER.uniqueId === player.uniqueId}
+              key={player.id}
+              player={player.User || {}}
+              isHost={playerData.uniqueId === player?.User?.id}
             />
           ))}
         </div>

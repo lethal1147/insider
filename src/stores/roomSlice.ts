@@ -1,19 +1,31 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "./storeConfig";
-import { PlayerType, RoomType } from "@/types";
-import { Socket } from "socket.io-client";
-import { withAsync } from "@/utils";
+import { MembersIncludesType, RoomType } from "@/types";
 import roomApi from "@/api/roomApi";
 
 type RoomState = {
-  socket: null | Socket;
   roomData: null | RoomType;
-  members: PlayerType[];
+  members: MembersIncludesType[];
 };
+
+const joinRoomByRoomId = createAsyncThunk(
+  "room/joinRoom",
+  async (body: {
+    roomId: string;
+    body: {
+      userId: string;
+      password?: string;
+      name: string;
+      color: string;
+    };
+  }) => {
+    const res = await roomApi.joinRoom(body.roomId, body.body);
+    return res.data;
+  }
+);
 
 const getInitialRoomState = (): RoomState => {
   return {
-    socket: null,
     roomData: null,
     members: [],
   };
@@ -25,28 +37,18 @@ export const roomSlice = createSlice({
   name: "room",
   initialState,
   reducers: {
-    joinRoom: async (
-      state,
-      action: PayloadAction<{
-        roomId: string;
-        user: PlayerType;
-        password?: string;
-      }>
-    ) => {
-      const { roomId, user, password } = action.payload;
-      const res = await withAsync(() =>
-        roomApi.joinRoom(roomId, {
-          userId: user.uniqueId,
-          name: user.name,
-          color: user.color,
-          password,
-        })
-      );
-      console.log(res);
+    setMembers: (state, action) => {
+      state.members = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(joinRoomByRoomId.fulfilled, (state, action) => {
+      state.roomData = action.payload.data;
+    });
   },
 });
 
-export const { joinRoom } = roomSlice.actions;
+export const { setMembers } = roomSlice.actions;
+export { joinRoomByRoomId };
 export const room = (state: RootState): RoomState => state.room;
 export default roomSlice.reducer;
