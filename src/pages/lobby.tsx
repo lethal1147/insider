@@ -1,8 +1,9 @@
+import CopyButton from "@/components/common/copyButton";
 import PlayerCard from "@/components/common/playerCard";
 import { Button } from "@/components/ui/button";
 import { initSocket } from "@/lib/socket";
 import { player, RootState } from "@/stores";
-import { room, setMembers } from "@/stores/roomSlice";
+import { clearRooms, room, setMembers } from "@/stores/roomSlice";
 import { handleSuccess } from "@/utils";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,25 +12,23 @@ import { Link } from "react-router-dom";
 export default function Lobby() {
   const dispatch = useDispatch();
   const playerData = useSelector((state: RootState) => player(state));
-  const roomData = useSelector((state: RootState) => room(state));
+  const { roomData, members } = useSelector((state: RootState) => room(state));
 
   useEffect(() => {
-    if (!playerData || !roomData.roomData?.id) return;
+    if (!playerData || !roomData?.id) return;
 
     const socket = initSocket();
     socket.emit("join-room", {
-      roomId: roomData.roomData?.id,
+      roomId: roomData?.id,
       ...playerData,
     });
 
     socket.on("room-members", (data) => {
+      console.log("data", data);
       dispatch(setMembers(data));
     });
 
     socket.on("members-leave", (member) => {
-      console.log(playerData.uniqueId !== member.id);
-      console.log(playerData.uniqueId);
-      console.log(member.id);
       if (playerData.uniqueId !== member.id) {
         handleSuccess(`${member.name} has leave.`);
       }
@@ -37,28 +36,32 @@ export default function Lobby() {
 
     return () => {
       socket.emit("leave-room", {
-        roomId: roomData.roomData?.id,
+        roomId: roomData?.id,
         ...playerData,
       });
       socket.close();
+      clearRooms();
     };
-  }, [playerData, roomData.roomData?.id]);
-
-  const { members } = roomData;
+  }, [playerData, roomData?.id]);
 
   return (
     <main className="h-screen w-screen bg-gray-main p-5 flex flex-col lg:p-10">
       <div className="w-full grow">
-        <h1 className="text-5xl font-bold text-white">
-          {roomData?.roomData?.roomName} ({members.length}/
-          {roomData?.roomData?.maxMember})
-        </h1>
+        <div className="w-full flex justify-between">
+          <h1 className="text-5xl font-bold text-white">
+            {roomData?.roomName} ({members.length}/{roomData?.maxMember})
+          </h1>
+          <CopyButton
+            textToCopy={roomData?.publicId || ""}
+            label={roomData?.publicId || ""}
+          />
+        </div>
         <div className="grid grid-cols-6 mt-10 gap-10">
           {members.map((player) => (
             <PlayerCard
               key={player.id}
               player={player.User || {}}
-              isHost={playerData.uniqueId === player?.User?.id}
+              isHost={roomData?.host?.id === player?.User?.id}
             />
           ))}
         </div>

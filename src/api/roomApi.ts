@@ -1,8 +1,13 @@
 import { HostSchemaType } from "@/schema";
 import { axiosInstance } from "@/lib";
+import { PlayerType } from "@/types";
 
 const roomApi = {
-  createRoom: async (body: HostSchemaType) => axiosInstance.post("/room", body),
+  createRoom: async (
+    body: HostSchemaType & {
+      hostData: PlayerType;
+    }
+  ) => axiosInstance.post("/room", body),
   joinRoom: async (
     roomId: string,
     body: {

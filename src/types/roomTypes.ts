@@ -1,3 +1,5 @@
+import { PlayerTypeWithId } from "./playerTypes";
+
 export type RoomType = {
   id: number;
   roomName: string;
@@ -8,4 +10,5 @@ export type RoomType = {
   guessTime: number;
   voteTime: number;
   createdAt: string;
+  host: PlayerTypeWithId;
 };

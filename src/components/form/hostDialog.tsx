@@ -17,13 +17,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { handleError, handleSuccess, withAsync } from "@/utils";
-import { RoomApi } from "@/api";
+import { handleError, handleSuccess } from "@/utils";
 import { useNavigate } from "react-router-dom";
-import { RoomType } from "@/types";
+import { useSelector } from "react-redux";
+import { player, RootState } from "@/stores";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { createRoom } from "@/stores/roomSlice";
 
 export default function HostDialog() {
   const navigate = useNavigate();
+  const playerData = useSelector((state: RootState) => player(state));
+  const dispatch = useAppDispatch();
   const form = useForm<HostSchemaType>({
     resolver: zodResolver(hostSchema),
     defaultValues: {
@@ -37,12 +41,10 @@ export default function HostDialog() {
 
   const onSubmit = async (data: HostSchemaType) => {
     try {
-      const { response, error } = await withAsync<RoomType>(() =>
-        RoomApi.createRoom(data)
-      );
-      if (error || !response) throw error;
-      navigate(`/lobby/${response.data.publicId}`);
-      handleSuccess(response.message);
+      const res = await dispatch(createRoom({ ...data, hostData: playerData }));
+      if (res.payload.error) throw new Error(res.payload.message);
+      navigate(`/lobby/${res.payload.data.publicId}`);
+      handleSuccess(res.payload.message);
     } catch (err) {
       handleError(err);
     }

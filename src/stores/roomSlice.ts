@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "./storeConfig";
-import { MembersIncludesType, RoomType } from "@/types";
+import { MembersIncludesType, PlayerType, RoomType } from "@/types";
 import roomApi from "@/api/roomApi";
+import { HostSchemaType } from "@/schema";
 
 type RoomState = {
   roomData: null | RoomType;
@@ -24,6 +25,18 @@ const joinRoomByRoomId = createAsyncThunk(
   }
 );
 
+const createRoom = createAsyncThunk(
+  "room/createRoom",
+  async (
+    body: HostSchemaType & {
+      hostData: PlayerType;
+    }
+  ) => {
+    const res = await roomApi.createRoom(body);
+    return res.data;
+  }
+);
+
 const getInitialRoomState = (): RoomState => {
   return {
     roomData: null,
@@ -40,15 +53,21 @@ export const roomSlice = createSlice({
     setMembers: (state, action) => {
       state.members = action.payload;
     },
+    clearRooms: (state) => {
+      state.roomData = null;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(joinRoomByRoomId.fulfilled, (state, action) => {
       state.roomData = action.payload.data;
     });
+    builder.addCase(createRoom.fulfilled, (state, action) => {
+      state.roomData = action.payload.data;
+    });
   },
 });
 
-export const { setMembers } = roomSlice.actions;
-export { joinRoomByRoomId };
+export const { setMembers, clearRooms } = roomSlice.actions;
+export { joinRoomByRoomId, createRoom };
 export const room = (state: RootState): RoomState => state.room;
 export default roomSlice.reducer;
