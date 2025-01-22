@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import playerReducer from "./playerSlice";
 import roomReducer from "./roomSlice";
+import roundReducer from "./roundSlice";
 import storage from "redux-persist/lib/storage";
 import { persistReducer } from "redux-persist";
 
@@ -13,6 +14,7 @@ const persistConfig = {
 const reducer = combineReducers({
   player: playerReducer,
   room: roomReducer,
+  round: roundReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducer);

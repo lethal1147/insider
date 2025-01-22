@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { initSocket } from "@/lib/socket";
 import { player, RootState } from "@/stores";
 import { clearRooms, room, setMembers } from "@/stores/roomSlice";
+import { round, setter } from "@/stores/roundSlice";
 import { handleSuccess } from "@/utils";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,18 +14,23 @@ export default function Lobby() {
   const dispatch = useDispatch();
   const playerData = useSelector((state: RootState) => player(state));
   const { roomData, members } = useSelector((state: RootState) => room(state));
+  const { host, insider, secretWord } = useSelector((state: RootState) =>
+    round(state)
+  );
+  console.log("host", host);
+  console.log("insider", insider);
+  console.log("secretWord", secretWord);
+  const socket = initSocket();
 
   useEffect(() => {
     if (!playerData || !roomData?.id) return;
 
-    const socket = initSocket();
     socket.emit("join-room", {
       roomId: roomData?.id,
       ...playerData,
     });
 
     socket.on("room-members", (data) => {
-      console.log("data", data);
       dispatch(setMembers(data));
     });
 
@@ -32,6 +38,12 @@ export default function Lobby() {
       if (playerData.uniqueId !== member.id) {
         handleSuccess(`${member.name} has leave.`);
       }
+    });
+
+    socket.on("set-role", (data) => {
+      setter({ name: "insider", value: data.insider });
+      setter({ name: "host", value: data.host });
+      setter({ name: "roundId", value: data.round.id });
     });
 
     return () => {
@@ -43,6 +55,11 @@ export default function Lobby() {
       clearRooms();
     };
   }, [playerData, roomData?.id]);
+
+  const onStartRound = () => {
+    if (!roomData?.id) return;
+    socket.emit("start-round", { roomId: roomData.id });
+  };
 
   return (
     <main className="h-screen w-screen bg-gray-main p-5 flex flex-col lg:p-10">
@@ -70,7 +87,11 @@ export default function Lobby() {
         <Button asChild size="lg" variant="secondary">
           <Link to="/">Leave</Link>
         </Button>
-        <Button size="lg">Start</Button>
+        {roomData?.host?.id === playerData?.uniqueId && (
+          <Button type="button" onClick={onStartRound} size="lg">
+            Start
+          </Button>
+        )}
       </section>
     </main>
   );
