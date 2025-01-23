@@ -5,14 +5,14 @@ import { PlayerTypeWithId } from "@/types";
 type RoundState = {
   insider: null | PlayerTypeWithId;
   host: null | PlayerTypeWithId;
-  secretWord: string;
+  secretWord: null | string;
   roundId: null | number;
 };
 
 const getInitialRoundState = (): RoundState => ({
   insider: null,
   host: null,
-  secretWord: "",
+  secretWord: null,
   roundId: null,
 });
 
@@ -22,12 +22,15 @@ export const roundSlice = createSlice({
   name: "round",
   initialState,
   reducers: {
-    setter: <T extends PlayerTypeWithId & string & number>(
+    setter: (
       state: Draft<RoundState>,
-      action: PayloadAction<{ name: keyof RoundState; value: T }>
+      action: PayloadAction<{
+        name: keyof RoundState;
+        value: RoundState[keyof RoundState];
+      }>
     ) => {
-      const { name, value } = action.payload;
-      state[name] = value;
+      (state[action.payload.name] as RoundState[keyof RoundState]) =
+        action.payload.value;
     },
   },
 });

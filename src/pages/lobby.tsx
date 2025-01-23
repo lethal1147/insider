@@ -1,10 +1,12 @@
 import CopyButton from "@/components/common/copyButton";
 import PlayerCard from "@/components/common/playerCard";
+import SecretWordDialog from "@/components/form/secretWordDialog";
 import { Button } from "@/components/ui/button";
+import { useSecretWordModal } from "@/hooks";
 import { initSocket } from "@/lib/socket";
-import { player, RootState } from "@/stores";
+import { player, RootState, round, setter } from "@/stores";
 import { clearRooms, room, setMembers } from "@/stores/roomSlice";
-import { round, setter } from "@/stores/roundSlice";
+import { PlayerTypeWithId, RoundType } from "@/types";
 import { handleSuccess } from "@/utils";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,12 +19,14 @@ export default function Lobby() {
   const { host, insider, secretWord } = useSelector((state: RootState) =>
     round(state)
   );
+  const { isOpen, openModal, closeModal, confirmSecretWord } =
+    useSecretWordModal();
   console.log("host", host);
   console.log("insider", insider);
   console.log("secretWord", secretWord);
-  const socket = initSocket();
 
   useEffect(() => {
+    const socket = initSocket();
     if (!playerData || !roomData?.id) return;
 
     socket.emit("join-room", {
@@ -40,11 +44,25 @@ export default function Lobby() {
       }
     });
 
-    socket.on("set-role", (data) => {
-      setter({ name: "insider", value: data.insider });
-      setter({ name: "host", value: data.host });
-      setter({ name: "roundId", value: data.round.id });
-    });
+    socket.on(
+      "set-role",
+      async (data: {
+        insider: PlayerTypeWithId;
+        host: PlayerTypeWithId;
+        round: RoundType;
+      }) => {
+        console.log(data.insider);
+        console.log(data.host);
+        console.log(data.round);
+        setter({ name: "insider", value: data.insider });
+        setter({ name: "host", value: data.host });
+        setter({ name: "roundId", value: data.round.id });
+        if (playerData.uniqueId === data.host.userId) {
+          const secretWord = await openModal();
+          console.log(secretWord);
+        }
+      }
+    );
 
     return () => {
       socket.emit("leave-room", {
@@ -57,6 +75,7 @@ export default function Lobby() {
   }, [playerData, roomData?.id]);
 
   const onStartRound = () => {
+    const socket = initSocket();
     if (!roomData?.id) return;
     socket.emit("start-round", { roomId: roomData.id });
   };
@@ -93,6 +112,12 @@ export default function Lobby() {
           </Button>
         )}
       </section>
+
+      <SecretWordDialog
+        isOpen={isOpen}
+        onClose={closeModal}
+        onConfirm={confirmSecretWord}
+      />
     </main>
   );
 }
