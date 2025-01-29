@@ -51,15 +51,17 @@ export default function Lobby() {
         host: PlayerTypeWithId;
         round: RoundType;
       }) => {
-        console.log(data.insider);
-        console.log(data.host);
-        console.log(data.round);
         setter({ name: "insider", value: data.insider });
         setter({ name: "host", value: data.host });
         setter({ name: "roundId", value: data.round.id });
         if (playerData.uniqueId === data.host.userId) {
           const secretWord = await openModal();
           console.log(secretWord);
+
+          socket.emit("set-secret-word", {
+            roomId: roomData?.id,
+            secretWord,
+          });
         }
       }
     );
