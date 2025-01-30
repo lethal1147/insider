@@ -8,7 +8,7 @@ import { player, RootState, round, setter } from "@/stores";
 import { clearRooms, room, setMembers } from "@/stores/roomSlice";
 import { PlayerTypeWithId, RoundType } from "@/types";
 import { handleSuccess } from "@/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
@@ -21,9 +21,7 @@ export default function Lobby() {
   );
   const { isOpen, openModal, closeModal, confirmSecretWord } =
     useSecretWordModal();
-  console.log("host", host);
-  console.log("insider", insider);
-  console.log("secretWord", secretWord);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
 
   useEffect(() => {
     const socket = initSocket();
@@ -51,20 +49,27 @@ export default function Lobby() {
         host: PlayerTypeWithId;
         round: RoundType;
       }) => {
+        console.log(data);
         setter({ name: "insider", value: data.insider });
         setter({ name: "host", value: data.host });
         setter({ name: "roundId", value: data.round.id });
-        if (playerData.uniqueId === data.host.userId) {
+        if (playerData.uniqueId === data.round.hostId) {
           const secretWord = await openModal();
           console.log(secretWord);
 
           socket.emit("set-secret-word", {
             roomId: roomData?.id,
+            roundId: data.round.id,
             secretWord,
           });
         }
       }
     );
+
+    socket.on("countdown", (data) => {
+      console.log(data);
+      setCurrentTime(Math.ceil(data / 1000));
+    });
 
     return () => {
       socket.emit("leave-room", {
@@ -89,6 +94,7 @@ export default function Lobby() {
           <h1 className="text-5xl font-bold text-white">
             {roomData?.roomName} ({members.length}/{roomData?.maxMember})
           </h1>
+          {currentTime && <div>Time left: {currentTime}</div>}
           <CopyButton
             textToCopy={roomData?.publicId || ""}
             label={roomData?.publicId || ""}
