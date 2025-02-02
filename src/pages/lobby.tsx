@@ -1,10 +1,11 @@
+import ChatBox from "@/components/common/chatBox";
 import CopyButton from "@/components/common/copyButton";
 import PlayerCard from "@/components/common/playerCard";
 import SecretWordDialog from "@/components/form/secretWordDialog";
 import { Button } from "@/components/ui/button";
 import { useSecretWordModal } from "@/hooks";
-import { initSocket } from "@/lib/socket";
-import { player, RootState, round, setter } from "@/stores";
+import { getSocket, initSocket } from "@/lib/socket";
+import { player, RootState, setter } from "@/stores";
 import { clearRooms, room, setMembers } from "@/stores/roomSlice";
 import { PlayerTypeWithId, RoundType } from "@/types";
 import { handleSuccess } from "@/utils";
@@ -16,16 +17,14 @@ export default function Lobby() {
   const dispatch = useDispatch();
   const playerData = useSelector((state: RootState) => player(state));
   const { roomData, members } = useSelector((state: RootState) => room(state));
-  const { host, insider, secretWord } = useSelector((state: RootState) =>
-    round(state)
-  );
+
   const { isOpen, openModal, closeModal, confirmSecretWord } =
     useSecretWordModal();
   const [currentTime, setCurrentTime] = useState<number | null>(null);
 
   useEffect(() => {
-    const socket = initSocket();
     if (!playerData || !roomData?.id) return;
+    const socket = initSocket();
 
     socket.emit("join-room", {
       roomId: roomData?.id,
@@ -49,13 +48,11 @@ export default function Lobby() {
         host: PlayerTypeWithId;
         round: RoundType;
       }) => {
-        console.log(data);
         setter({ name: "insider", value: data.insider });
         setter({ name: "host", value: data.host });
         setter({ name: "roundId", value: data.round.id });
         if (playerData.uniqueId === data.round.hostId) {
           const secretWord = await openModal();
-          console.log(secretWord);
 
           socket.emit("set-secret-word", {
             roomId: roomData?.id,
@@ -67,7 +64,6 @@ export default function Lobby() {
     );
 
     socket.on("countdown", (data) => {
-      console.log(data);
       setCurrentTime(Math.ceil(data / 1000));
     });
 
@@ -82,8 +78,9 @@ export default function Lobby() {
   }, [playerData, roomData?.id]);
 
   const onStartRound = () => {
-    const socket = initSocket();
     if (!roomData?.id) return;
+    const socket = getSocket();
+    if (!socket) return;
     socket.emit("start-round", { roomId: roomData.id });
   };
 
@@ -110,15 +107,18 @@ export default function Lobby() {
           ))}
         </div>
       </div>
-      <section className="flex gap-3 justify-end">
-        <Button asChild size="lg" variant="secondary">
-          <Link to="/">Leave</Link>
-        </Button>
-        {roomData?.host?.id === playerData?.uniqueId && (
-          <Button type="button" onClick={onStartRound} size="lg">
-            Start
+      <section className="flex gap-3 items-end justify-between">
+        <ChatBox />
+        <div className="flex gap-3">
+          <Button asChild size="lg" variant="secondary">
+            <Link to="/">Leave</Link>
           </Button>
-        )}
+          {roomData?.host?.id === playerData?.uniqueId && (
+            <Button type="button" onClick={onStartRound} size="lg">
+              Start
+            </Button>
+          )}
+        </div>
       </section>
 
       <SecretWordDialog

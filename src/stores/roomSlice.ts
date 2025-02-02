@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "./storeConfig";
-import { MembersIncludesType, PlayerType, RoomType } from "@/types";
+import { Chat, MembersIncludesType, PlayerType, RoomType } from "@/types";
 import roomApi from "@/api/roomApi";
 import { HostSchemaType } from "@/schema";
 
 type RoomState = {
   roomData: null | RoomType;
   members: MembersIncludesType[];
+  chats: Chat[];
 };
 
 const joinRoomByRoomId = createAsyncThunk(
@@ -41,6 +42,7 @@ const getInitialRoomState = (): RoomState => {
   return {
     roomData: null,
     members: [],
+    chats: [],
   };
 };
 
@@ -56,6 +58,9 @@ export const roomSlice = createSlice({
     clearRooms: (state) => {
       state.roomData = null;
     },
+    setChats: (state, action) => {
+      state.chats = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(joinRoomByRoomId.fulfilled, (state, action) => {
@@ -67,7 +72,7 @@ export const roomSlice = createSlice({
   },
 });
 
-export const { setMembers, clearRooms } = roomSlice.actions;
+export const { setMembers, clearRooms, setChats } = roomSlice.actions;
 export { joinRoomByRoomId, createRoom };
 export const room = (state: RootState): RoomState => state.room;
 export default roomSlice.reducer;
